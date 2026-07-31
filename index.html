@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <title>DESI TOURNAMENT</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+    <!-- Custom Styles -->
+    <style>
+        /* Custom scrollbar for webkit browsers */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .main-content { padding-bottom: 80px; /* Space for fixed nav bar */ }
+        .page { display: none; }
+        .page.active { display: block; }
+        .category-grid-item {
+            background-image: linear-gradient(to top right, #1e40af, #3b82f6);
+        }
+        /* App-like feel: no pinch/double-tap zoom, no text-select or tap highlight, no pull-to-refresh bounce */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+            touch-action: pan-x pan-y;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea {
+            font-size: 16px; /* prevents iOS auto-zoom when a field is focused */
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white font-sans">
+
+    <div id="app-container" class="max-w-4xl mx-auto">
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- Home Page -->
+            <div id="home-page" class="page active p-4">
+                <header class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-white">DESI<span class="text-blue-500">TOURNAMENT</span></h1>
+                    <div class="flex items-center gap-4">
+                        <button id="header-icon-btn" class="hidden w-9 h-9 rounded-full overflow-hidden border-2 border-slate-700 items-center justify-center bg-slate-800">
+                            <img id="header-icon-img" src="" class="w-full h-full object-cover transition-opacity duration-500">
+                        </button>
+                        <button id="notifications-bell-btn" class="relative">
+                            <i class="fas fa-bell text-xl text-gray-400"></i>
+                            <span id="notifications-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-bold w-4 h-4 rounded-full items-center justify-center">0</span>
+                        </button>
+                    </div>
+                </header>
+                
+                <!-- Banner Carousel -->
+                <div id="banner-carousel" class="relative w-full h-48 md:h-64 rounded-xl overflow-hidden mb-8 shadow-lg">
+                    <!-- Banners will be injected here -->
+                </div>
+
+                <!-- Movie Carousels by Category -->
+                <div id="movie-carousels-container">
+                    <!-- Categories and movies will be injected here -->
+                </div>
+            </div>
+
+            <!-- Search Page -->
+            <div id="search-page" class="page p-4">
+                <h2 class="text-2xl font-bold mb-4">Search Matches</h2>
+                <div class="relative">
+                    <input type="text" id="search-input" class="w-full bg-slate-800 text-white rounded-lg p-3 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Search for a match or team...">
+                    <i class="fas fa-search absolute left-3 top-3.5 text-gray-400"></i>
+                </div>
+                <div id="posts-feed" class="space-y-4 mt-6">
+                    <!-- Community photo posts (uploaded from Profile) render here -->
+                </div>
+
+                <div id="search-results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+                    <!-- Search results will be injected here -->
+                </div>
+            </div>
+
+            <!-- Categories Page -->
+            <div id="categories-page" class="page p-4">
+                <h2 class="text-2xl font-bold mb-4">All Tournaments</h2>
+                <div id="categories-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <!-- Categories will be injected here -->
+                </div>
+                <div id="game-banners-list" class="mt-6 space-y-3">
+                    <!-- Game banners will be injected here -->
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profile-page" class="page p-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Profile</h2>
+                    <button id="open-settings-btn" class="hidden w-10 h-10 rounded-full bg-slate-800 items-center justify-center hover:bg-slate-700">
+                        <i class="fas fa-cog text-xl text-gray-300"></i>
+                    </button>
+                </div>
+                
+                <!-- Logged In View -->
+                <div id="logged-in-view" class="hidden text-center">
+                    <div class="relative inline-block mb-4">
+                        <img id="profile-photo-img" src="" class="w-24 h-24 rounded-full object-cover mx-auto hidden">
+                        <i id="profile-photo-placeholder" class="fas fa-user-circle text-6xl text-blue-500"></i>
+                        <label for="profile-photo-input" class="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-full flex items-center justify-center cursor-pointer border-2 border-slate-900">
+                            <i class="fas fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="profile-photo-input" accept="image/*" class="hidden">
+                    </div>
+                    <p class="text-lg mb-2">Welcome back!</p>
+                    <p id="user-email" class="text-gray-400 mb-2"></p>
+                    <p id="profile-photo-status" class="text-sm mb-6"></p>
+
+                    <!-- My Posts (photos uploaded by the user, shown as a gallery + in the community feed) -->
+                    <div class="text-left">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-semibold text-lg">My Posts</h3>
+                            <label for="post-photo-input" class="cursor-pointer bg-blue-600 hover:bg-blue-700 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                            <input type="file" id="post-photo-input" accept="image/*" class="hidden">
+                        </div>
+                        <p id="post-photo-status" class="text-sm mb-3 text-center"></p>
+                        <div id="my-posts-grid" class="grid grid-cols-3 gap-1">
+                            <!-- User's uploaded post photos will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Forms View -->
+                <div id="auth-forms-view">
+                    <!-- MODIFIED: Wrapped Login form in a container -->
+                    <div id="login-container" class="hidden">
+                        <form id="login-form" class="bg-slate-800 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-4">Login</h3>
+                            <input type="email" id="login-email" class="w-full bg-slate-700 rounded p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Email" required>
+                            <input type="password" id="login-password" class="w-full bg-slate-700 rounded p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Password" required>
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-semibold">Login</button>
+                        </form>
+                        <!-- ADDED: Toggle button to switch to signup -->
+                        <p class="text-center text-sm text-gray-400 mt-4">
+                            Don't have an account? <button id="show-signup-btn" class="font-semibold text-blue-500 hover:underline focus:outline-none">Sign Up</button>
+                        </p>
+                    </div>
+
+                    <!-- MODIFIED: Wrapped Signup form in a container and made it hidden by default -->
+                    <div id="signup-container">
+                        <form id="signup-form" class="bg-slate-800 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold mb-4">Sign Up</h3>
+                            <input type="email" id="signup-email" class="w-full bg-slate-700 rounded p-3 mb-3 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Email" required>
+                            <input type="password" id="signup-password" class="w-full bg-slate-700 rounded p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Password (min. 6 characters)" required>
+                            <button type="submit" class="w-full bg-gray-600 hover:bg-gray-700 rounded-lg p-3 font-semibold">Create Account</button>
+                        </form>
+                        <!-- ADDED: Toggle button to switch back to login -->
+                        <p class="text-center text-sm text-gray-400 mt-4">
+                            Already have an account? <button id="show-login-btn" class="font-semibold text-blue-500 hover:underline focus:outline-none">Login</button>
+                        </p>
+                    </div>
+                </div>
+                 <p id="auth-error" class="text-red-500 mt-4 text-center"></p>
+            </div>
+
+            <!-- Match Details Page -->
+            <div id="movie-details-page" class="page">
+                <div id="movie-details-content" class="relative">
+                    <!-- Content will be injected here -->
+                </div>
+            </div>
+
+            <!-- Payment Gate Page -->
+            <div id="payment-page" class="page p-4">
+                <div id="payment-content" class="max-w-md mx-auto mt-10 text-center">
+                    <!-- Content will be injected here -->
+                </div>
+                <div class="text-center mt-6">
+                    <button id="payment-logout-btn" class="text-sm text-gray-400 underline">Logout</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Notifications Modal -->
+        <div id="notifications-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+            <div class="bg-slate-800 w-full max-w-md sm:rounded-xl rounded-t-xl max-h-[75vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b border-slate-700">
+                    <h3 class="text-lg font-bold">Notifications</h3>
+                    <button id="notifications-modal-close" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
+                </div>
+                <div id="notifications-list" class="overflow-y-auto p-4 space-y-3">
+                    <p class="text-gray-400 text-sm">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+            <div class="bg-slate-800 w-full max-w-md sm:rounded-xl rounded-t-xl max-h-[85vh] overflow-y-auto">
+                <div class="flex justify-between items-center p-4 border-b border-slate-700">
+                    <h3 class="text-lg font-bold">Settings</h3>
+                    <button id="settings-modal-close" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
+                </div>
+                <div class="p-4">
+                    <div class="flex justify-center gap-6 mb-6">
+                        <a id="instagram-link" href="#" target="_blank" rel="noopener" class="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center hover:bg-slate-700">
+                            <i class="fab fa-instagram text-2xl text-pink-500"></i>
+                        </a>
+                        <a id="whatsapp-link" href="#" target="_blank" rel="noopener" class="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center hover:bg-slate-700">
+                            <i class="fab fa-whatsapp text-2xl text-green-500"></i>
+                        </a>
+                    </div>
+
+                    <button id="enable-notifications-btn" class="w-full bg-slate-700 hover:bg-slate-600 rounded-lg p-3 font-semibold mb-3 flex items-center justify-center gap-2">
+                        <i class="fas fa-bell"></i> Enable Notifications
+                    </button>
+                    <p id="notification-status" class="text-sm mb-4 text-center"></p>
+
+                    <button id="share-app-btn" class="w-full bg-slate-700 hover:bg-slate-600 rounded-lg p-3 font-semibold mb-3 flex items-center justify-center gap-2">
+                        <i class="fas fa-share-alt"></i> Share App Link
+                    </button>
+                    <p id="share-app-status" class="text-sm mb-4 text-center"></p>
+
+                    <button id="logout-btn" class="w-full bg-red-600 hover:bg-red-700 rounded-lg p-3 font-semibold">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comments Modal -->
+        <div id="comments-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center">
+            <div class="bg-slate-800 w-full max-w-md sm:rounded-xl rounded-t-xl max-h-[80vh] flex flex-col">
+                <div class="flex justify-between items-center p-4 border-b border-slate-700">
+                    <h3 class="text-lg font-bold">Comments</h3>
+                    <button id="comments-modal-close" class="text-gray-400 hover:text-white text-xl leading-none">&times;</button>
+                </div>
+                <div id="comments-list" class="overflow-y-auto p-4 space-y-3 flex-1">
+                    <p class="text-gray-400 text-sm">Loading...</p>
+                </div>
+                <div class="p-3 border-t border-slate-700 flex gap-2">
+                    <input type="text" id="comment-input" class="flex-1 bg-slate-700 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Write a comment...">
+                    <button id="comment-send-btn" class="bg-blue-600 hover:bg-blue-700 rounded-lg px-4 font-semibold">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Icon Photo Modal (full display photo) -->
+        <div id="header-icon-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 overflow-auto">
+            <button id="header-icon-modal-close" class="fixed top-4 right-4 text-white text-3xl leading-none z-10">&times;</button>
+            <img id="header-icon-modal-img" src="" class="max-w-full max-h-full rounded-lg object-contain cursor-zoom-in transition-transform duration-200">
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 max-w-4xl mx-auto h-20 bg-slate-800/80 backdrop-blur-sm border-t border-slate-700 shadow-t-lg">
+            <div class="flex justify-around items-center h-full">
+                <button data-page="home-page" class="nav-btn text-blue-500 flex flex-col items-center">
+                    <i class="fas fa-home text-2xl"></i>
+                    <span class="text-xs mt-1">Home</span>
+                </button>
+                <button data-page="search-page" class="nav-btn text-gray-400 flex flex-col items-center">
+                    <i class="fas fa-search text-2xl"></i>
+                    <span class="text-xs mt-1">Search</span>
+                </button>
+                <button data-page="categories-page" class="nav-btn text-gray-400 flex flex-col items-center">
+                    <i class="fas fa-th-large text-2xl"></i>
+                    <span class="text-xs mt-1">Tournaments</span>
+                </button>
+                <button data-page="profile-page" class="nav-btn text-gray-400 flex flex-col items-center">
+                    <i class="fas fa-user text-2xl"></i>
+                    <span class="text-xs mt-1">Profile</span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAVjzYmGN_HlsC-srlvOVB0M9S2qoei3hs",
+            authDomain: "naikdesitonamet.firebaseapp.com",
+            databaseURL: "https://naikdesitonamet-default-rtdb.firebaseio.com",
+            projectId: "naikdesitonamet",
+            storageBucket: "naikdesitonamet.firebasestorage.app",
+            messagingSenderId: "32822181148",
+            appId: "1:32822181148:web:48c0fd061a213b71a28ed9",
+            measurementId: "G-BCNDRX1E45"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // --- GLOBAL STATE ---
+        let allMovies = {};
+        let allCategories = {};
+        let currentBannerIndex = 0;
+        let bannerInterval;
+
+        // --- UI ELEMENTS ---
+        const pages = document.querySelectorAll('.page');
+        const navBtns = document.querySelectorAll('.nav-btn');
+
+        // --- PAYMENT / LOCK STATE ---
+        let userIsPaid = false;
+
+        // --- SPA NAVIGATION ---
+        const showPage = (pageId) => {
+            pages.forEach(page => {
+                page.classList.toggle('active', page.id === pageId);
+            });
+            navBtns.forEach(btn => {
+                btn.classList.toggle('text-blue-500', btn.dataset.page === pageId);
+                btn.classList.toggle('text-gray-400', btn.dataset.page !== pageId);
+            });
+            window.scrollTo(0, 0);
+        };
+
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', () => showPage(btn.dataset.page));
+        });
+        
+        // --- AUTH UI ELEMENTS ---
+        const loggedInView = document.getElementById('logged-in-view');
+        const authFormsView = document.getElementById('auth-forms-view');
+        const userEmailEl = document.getElementById('user-email');
+        const authErrorEl = document.getElementById('auth-error');
+        // ADDED: References to new containers and buttons
+        const loginContainer = document.getElementById('login-container');
+        const signupContainer = document.getElementById('signup-container');
+        const showSignupBtn = document.getElementById('show-signup-btn');
+        const showLoginBtn = document.getElementById('show-login-btn');
+
+
+        // --- AUTHENTICATION LOGIC ---
+        const openSettingsBtn = document.getElementById('open-settings-btn');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalClose = document.getElementById('settings-modal-close');
+
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
+        }
+        if (settingsModalClose) {
+            settingsModalClose.addEventListener('click', () => settingsModal.classList.add('hidden'));
+        }
+        if (settingsModal) {
+            settingsModal.addEventListener('click', (e) => {
+                if (e.target === settingsModal) settingsModal.classList.add('hidden');
+            });
+        }
+
+        auth.onAuthStateChanged(user => {
+            authErrorEl.textContent = '';
+            if (user) {
+                loggedInView.classList.remove('hidden');
+                authFormsView.classList.add('hidden');
+                userEmailEl.textContent = user.email;
+                if (openSettingsBtn) { openSettingsBtn.classList.remove('hidden'); openSettingsBtn.classList.add('flex'); }
+                initPaymentGate(user);
+                if (typeof renderMyPosts === 'function') renderMyPosts();
+            } else {
+                loggedInView.classList.add('hidden');
+                authFormsView.classList.remove('hidden');
+                userEmailEl.textContent = '';
+                if (openSettingsBtn) { openSettingsBtn.classList.add('hidden'); openSettingsBtn.classList.remove('flex'); }
+                if (settingsModal) settingsModal.classList.add('hidden');
+                // MODIFIED: Ensure the view resets to the login form when logged out
+                signupContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+                teardownPaymentGate();
+                if (typeof renderMyPosts === 'function') renderMyPosts();
+                if (typeof renderPostsFeed === 'function') renderPostsFeed();
+            }
+        });
+
+        document.getElementById('signup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch(error => authErrorEl.textContent = error.message);
+        });
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(error => authErrorEl.textContent = error.message);
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // --- ADDED: AUTH FORM TOGGLING LOGIC ---
+        showSignupBtn.addEventListener('click', () => {
+            loginContainer.classList.add('hidden');
+            signupContainer.classList.remove('hidden');
+            authErrorEl.textContent = ''; // Clear previous errors
+        });
+
+        showLoginBtn.addEventListener('click', () => {
+            signupContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            authErrorEl.textContent = ''; // Clear previous errors
+        });
+
+
+        // --- DATA FETCHING AND RENDERING ---
+
+        // Banners
+        let lastBannersData = null;
+
+        const renderBanners = (banners) => {
+            const container = document.getElementById('banner-carousel');
+            lastBannersData = banners;
+            if (!banners || Object.keys(banners).length === 0) return;
+            container.innerHTML = '';
+            const bannerIds = Object.keys(banners);
+
+            bannerIds.forEach((key, index) => {
+                const banner = banners[key];
+                // Defensive check for URL
+                if (banner && banner.imageUrl) {
+                    const watchLink = banner.watchLink || '';
+                    const locked = !!watchLink && !userIsPaid;
+                    const wrapper = document.createElement('div');
+                    wrapper.className = `absolute inset-0 transition-opacity duration-1000 ${index === 0 ? 'opacity-100' : 'opacity-0'} ${watchLink ? 'cursor-pointer' : ''}`;
+                    wrapper.innerHTML = `
+                        <img src="${banner.imageUrl}" class="w-full h-full object-cover ${locked ? 'brightness-50' : ''}">
+                        ${watchLink ? `
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="bg-black/50 w-12 h-12 rounded-full flex items-center justify-center">
+                                <i class="fas ${locked ? 'fa-lock text-yellow-400' : 'fa-play ml-1'} text-lg"></i>
+                            </div>
+                        </div>` : ''}
+                    `;
+                    if (watchLink) {
+                        wrapper.addEventListener('click', () => handleBannerClick(watchLink));
+                    }
+                    container.appendChild(wrapper);
+                }
+            });
+
+            const bannerSlides = container.querySelectorAll(':scope > div');
+            if (bannerSlides.length > 1) {
+                if (bannerInterval) clearInterval(bannerInterval); // Clear previous interval
+                currentBannerIndex = 0;
+                bannerInterval = setInterval(() => {
+                    bannerSlides[currentBannerIndex].classList.remove('opacity-100');
+                    currentBannerIndex = (currentBannerIndex + 1) % bannerSlides.length;
+                    bannerSlides[currentBannerIndex].classList.add('opacity-100');
+                }, 5000);
+            }
+        };
+
+        // Replaces the banner carousel with an inline YouTube player at the same spot when clicked
+        const playBannerVideo = (watchLink) => {
+            if (!watchLink) return;
+            const container = document.getElementById('banner-carousel');
+            if (!container) return;
+            if (bannerInterval) clearInterval(bannerInterval);
+            const embedUrl = getYouTubeEmbedUrl(watchLink);
+
+            if (embedUrl) {
+                container.innerHTML = `
+                    <iframe class="w-full h-full absolute inset-0" src="${embedUrl}" title="Banner Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <button onclick="closeBannerVideo()" class="absolute top-2 right-2 bg-black/60 w-9 h-9 rounded-full flex items-center justify-center z-20">
+                        <i class="fas fa-times"></i>
+                    </button>`;
+            } else {
+                // Not a recognizable YouTube link, fall back to opening it directly
+                window.open(watchLink, '_blank');
+            }
+        };
+
+        // Closes the inline banner video and restores the carousel
+        const closeBannerVideo = () => {
+            renderBanners(lastBannersData);
+        };
+
+        // Home Page Carousels
+        const renderHomePage = () => {
+            const container = document.getElementById('movie-carousels-container');
+            container.innerHTML = '<div>Loading...</div>';
+            
+            const categoryIds = Object.keys(allCategories);
+            container.innerHTML = '';
+            
+            categoryIds.forEach(catId => {
+                const category = allCategories[catId];
+                // Defensive check for category name
+                if (!category || !category.name) return;
+
+                const moviesInCategory = Object.entries(allMovies).filter(([id, movie]) => movie.category === category.name);
+
+                if (moviesInCategory.length > 0) {
+                    const section = document.createElement('div');
+                    section.className = 'mb-8';
+                    let moviesHTML = '';
+                    moviesInCategory.forEach(([movieId, movie]) => {
+                        // Defensive check for match thumbnail URL
+                        if (movie && movie.posterUrl) {
+                            const liveBadge = movie.rating === 'Live'
+                                ? '<span class="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">● LIVE</span>'
+                                : '';
+                            moviesHTML += `
+                                <div class="flex-shrink-0 w-32 md:w-40 mr-4 cursor-pointer relative" onclick="handleMovieClick('${movieId}')">
+                                    <img src="${movie.posterUrl}" alt="${movie.title}" class="w-full h-48 md:h-60 object-cover rounded-lg shadow-md hover:scale-105 transition-transform duration-300">
+                                    ${liveBadge}
+                                    <p class="text-xs text-gray-300 mt-1 truncate">${movie.title || ''}</p>
+                                </div>`;
+                        }
+                    });
+
+                    section.innerHTML = `
+                        <h2 class="text-xl font-bold mb-4">${category.name}</h2>
+                        <div class="flex overflow-x-auto pb-4 no-scrollbar">
+                            ${moviesHTML}
+                        </div>`;
+                    container.appendChild(section);
+                }
+            });
+        };
+
+        // Movie Details Page
+        const showMovieDetails = (movieId) => {
+            // CRITICAL: Defensive check to prevent errors like /movies/undefined
+            if (!movieId) {
+                console.error("Attempted to show details for a null or undefined movieId.");
+                return;
+            }
+
+            const movie = allMovies[movieId];
+            if (!movie) {
+                console.error(`Movie with ID ${movieId} not found.`);
+                return;
+            }
+
+            const contentEl = document.getElementById('movie-details-content');
+            // Defensive checks for all match properties
+            const posterUrl = movie.posterUrl || 'https://via.placeholder.com/400x600?text=No+Image';
+            const title = movie.title || 'Untitled Match';
+            const matchDate = movie.year || 'N/A';
+            const status = movie.rating || 'Upcoming';
+            const description = movie.description || 'No description available.';
+            const teams = movie.cast || 'N/A';
+
+            const statusBadgeHtml = status === 'Live'
+                ? '<span class="bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">● LIVE</span>'
+                : status === 'Completed'
+                    ? '<span class="bg-gray-600 text-white text-xs font-bold px-2 py-1 rounded-full">Completed</span>'
+                    : '<span class="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full">Upcoming</span>';
+
+            const watchLink = movie.watchLink || '';
+            const escapedWatchLink = watchLink.replace(/'/g, "\\'");
+            const liveRoomName = movie.streamType === 'camera' ? (movie.liveRoomName || '') : '';
+            const escapedRoomName = liveRoomName.replace(/'/g, "\\'");
+            const playAction = liveRoomName
+                ? `joinLiveMatch('${escapedRoomName}')`
+                : `playMovieVideo('${escapedWatchLink}')`;
+
+            contentEl.innerHTML = `
+                <div id="movie-player-container" class="h-80 md:h-96 w-full relative bg-black">
+                    <img id="movie-poster-img" src="${posterUrl}" class="w-full h-full object-cover object-top absolute cursor-pointer" onclick="${playAction}">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent pointer-events-none"></div>
+                    <div class="absolute inset-0 flex items-center justify-center cursor-pointer" onclick="${playAction}">
+                        <div class="bg-black/50 w-16 h-16 rounded-full flex items-center justify-center hover:bg-black/70 transition">
+                            <i class="fas fa-play text-2xl ml-1"></i>
+                        </div>
+                    </div>
+                    <button onclick="history.back()" class="absolute top-4 left-4 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center z-20">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                </div>
+                <div class="p-4 -mt-20 relative z-10">
+                    <h2 class="text-3xl font-bold">${title}</h2>
+                    <div class="flex items-center space-x-3 text-gray-400 my-2">
+                        <span><i class="fas fa-calendar-alt mr-1"></i>${matchDate}</span>
+                        ${statusBadgeHtml}
+                    </div>
+                    <button onclick="${playAction}" class="block w-full text-center bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-semibold my-4">
+                        <i class="fas fa-play mr-2"></i> Watch Match
+                    </button>
+                    <p class="text-gray-300 leading-relaxed">${description}</p>
+                    <h3 class="text-lg font-semibold mt-4 mb-2">Teams</h3>
+                    <p class="text-gray-400">${teams}</p>
+                </div>
+            `;
+            showPage('movie-details-page');
+        };
+
+        // Converts a YouTube URL (watch, youtu.be, embed, shorts, live) into an embeddable URL
+        const getYouTubeEmbedUrl = (url) => {
+            if (!url) return null;
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=)([^&]+)/,
+                /(?:youtu\.be\/)([^?&]+)/,
+                /(?:youtube\.com\/embed\/)([^?&]+)/,
+                /(?:youtube\.com\/shorts\/)([^?&]+)/,
+                /(?:youtube\.com\/live\/)([^?&]+)/
+            ];
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) return `https://www.youtube.com/embed/${match[1]}?autoplay=1&rel=0`;
+            }
+            return null;
+        };
+
+        // Path to the secure token function. Works automatically as long as this
+        // site (index.html) is deployed on the same Netlify site as the function.
+        const LIVEKIT_TOKEN_URL = '/.netlify/functions/livekit-token';
+
+        let liveViewerRoom = null;
+
+        // Joins a LiveKit room as a viewer and shows the admin's live camera feed
+        // in the same spot the YouTube player would normally appear.
+        const joinLiveMatch = async (roomName) => {
+            if (!roomName) return;
+            const container = document.getElementById('movie-player-container');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="w-full h-full flex items-center justify-center text-gray-400">Connecting to live stream...</div>
+                <button onclick="history.back()" class="absolute top-4 left-4 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center z-20">
+                    <i class="fas fa-arrow-left"></i>
+                </button>`;
+
+            try {
+                const identity = 'viewer-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+                const resp = await fetch(`${LIVEKIT_TOKEN_URL}?room=${encodeURIComponent(roomName)}&identity=${encodeURIComponent(identity)}&role=viewer`);
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Could not join live stream');
+
+                const { Room, RoomEvent } = LivekitClient;
+                if (liveViewerRoom) { try { await liveViewerRoom.disconnect(); } catch (e) {} }
+                liveViewerRoom = new Room();
+
+                liveViewerRoom.on(RoomEvent.TrackSubscribed, (track) => {
+                    if (track.kind === 'video') {
+                        const el = track.attach();
+                        el.className = 'w-full h-full absolute inset-0 object-contain bg-black';
+                        container.querySelector('.flex.items-center.justify-center')?.remove();
+                        container.prepend(el);
+                    } else if (track.kind === 'audio') {
+                        track.attach();
+                    }
+                });
+
+                liveViewerRoom.on(RoomEvent.Disconnected, () => {
+                    if (container.isConnected) {
+                        container.querySelector('div.flex')?.remove();
+                        const msg = document.createElement('div');
+                        msg.className = 'w-full h-full flex items-center justify-center text-gray-400';
+                        msg.textContent = 'Live stream ended.';
+                        container.prepend(msg);
+                    }
+                });
+
+                await liveViewerRoom.connect(data.url, data.token);
+            } catch (err) {
+                container.innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center text-red-400 text-center px-4">${err.message || 'Could not connect to live stream'}</div>
+                    <button onclick="history.back()" class="absolute top-4 left-4 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center z-20">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>`;
+            }
+        };
+
+        // Replaces the thumbnail with an inline YouTube player at the same spot when clicked
+        const playMovieVideo = (watchLink) => {
+            if (!watchLink) return;
+            const container = document.getElementById('movie-player-container');
+            if (!container) return;
+            const embedUrl = getYouTubeEmbedUrl(watchLink);
+
+            if (embedUrl) {
+                container.innerHTML = `
+                    <iframe class="w-full h-full absolute inset-0" src="${embedUrl}" title="Match Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <button onclick="history.back()" class="absolute top-4 left-4 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center z-20">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>`;
+            } else {
+                // Not a recognizable YouTube link, fall back to opening it directly
+                window.open(watchLink, '_blank');
+            }
+        };
+
+        // Search Page
+        const searchInput = document.getElementById('search-input');
+        const searchResultsContainer = document.getElementById('search-results');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (searchTerm.length < 2) {
+                searchResultsContainer.innerHTML = '<p class="col-span-full text-center text-gray-400">Enter at least 2 characters to search.</p>';
+                return;
+            }
+
+            const results = Object.entries(allMovies).filter(([id, movie]) => 
+                movie.title && movie.title.toLowerCase().includes(searchTerm)
+            );
+
+            if (results.length > 0) {
+                searchResultsContainer.innerHTML = results.map(([movieId, movie]) => {
+                    // Defensive check for poster URL
+                    if (movie && movie.posterUrl) {
+                        return `
+                        <div class="cursor-pointer relative" onclick="handleMovieClick('${movieId}')">
+                            <img src="${movie.posterUrl}" alt="${movie.title}" class="w-full h-auto object-cover rounded-lg shadow-md">
+                        </div>`;
+                    }
+                    return ''; // Return empty string if poster is missing
+                }).join('');
+            } else {
+                searchResultsContainer.innerHTML = '<p class="col-span-full text-center text-gray-400">No matches found.</p>';
+            }
+        });
+        
+        // Categories Page
+        const renderCategoriesPage = () => {
+            const container = document.getElementById('categories-grid');
+            const icons = ['fa-futbol', 'fa-trophy', 'fa-shield-alt', 'fa-users', 'fa-medal', 'fa-flag', 'fa-star'];
+            let iconIndex = 0;
+
+            container.innerHTML = Object.values(allCategories).map(cat => {
+                if (!cat || !cat.name) return '';
+                const iconClass = icons[iconIndex % icons.length];
+                iconIndex++;
+                return `
+                    <div class="category-grid-item flex flex-col items-center justify-center p-6 rounded-lg shadow-lg text-center cursor-pointer">
+                        <i class="fas ${iconClass} text-4xl mb-3"></i>
+                        <span class="font-semibold text-lg">${cat.name}</span>
+                    </div>`;
+            }).join('');
+        };
+
+        // Game Banners (Categories page ke neeche, Admin Panel > Game Banner se set hote hain)
+        let allGameBanners = {};
+
+        const renderGameBanners = (banners) => {
+            allGameBanners = banners || {};
+            const container = document.getElementById('game-banners-list');
+            if (!container) return;
+
+            const entries = Object.entries(allGameBanners);
+            if (entries.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = entries.map(([id, banner]) => {
+                if (banner.imageUrl) {
+                    // Image banner: full-width image with Play button overlaid
+                    return `
+                        <div class="relative rounded-lg overflow-hidden cursor-pointer shadow-lg" onclick="openGameLink('${id}')">
+                            <img src="${banner.imageUrl}" class="w-full h-32 object-cover">
+                            ${banner.text ? `
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex items-end p-3">
+                                <span class="text-white font-bold text-lg drop-shadow">${banner.text}</span>
+                            </div>` : ''}
+                            <span class="absolute bottom-3 right-3 bg-lime-500 text-white font-extrabold px-5 py-2 rounded-lg shadow">${banner.buttonText || 'Play'}</span>
+                        </div>`;
+                }
+                // Fallback: no image set, show plain text row
+                return `
+                    <div class="bg-white rounded-lg flex items-center justify-between p-4 gap-4 cursor-pointer" onclick="openGameLink('${id}')">
+                        <span class="text-blue-600 font-extrabold text-2xl truncate">${banner.text || ''}</span>
+                        <span class="bg-lime-500 hover:bg-lime-600 text-white font-extrabold px-6 py-3 rounded-lg shrink-0">${banner.buttonText || 'Play'}</span>
+                    </div>`;
+            }).join('');
+        };
+
+        // Opens the game link in a new tab when the user taps the Play button
+        const openGameLink = (id) => {
+            const banner = allGameBanners[id];
+            if (!banner || !banner.gameLink) return;
+            let link = banner.gameLink.trim();
+            if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
+            window.open(link, '_blank', 'noopener');
+        };
+
+
+        // --- PAYMENT GATE LOGIC ---
+        let userPaymentRef = null;
+        let paymentRequestRef = null;
+        let currentRazorpayKeyId = '';
+        let currentRazorpayPayeeName = '';
+        let currentRazorpayAmount = '';
+        let currentQrImage = '';
+
+        // Keep Razorpay payment details in sync (used to open the Razorpay checkout popup)
+        db.ref('settings').on('value', snapshot => {
+            const settings = snapshot.val() || {};
+            currentRazorpayKeyId = settings.razorpayKeyId || '';
+            currentRazorpayPayeeName = settings.razorpayPayeeName || '';
+            currentRazorpayAmount = settings.razorpayAmount || '';
+        });
+
+        // Keep the QR code image in sync (used by the payment form whenever it's shown)
+        db.ref('settings/paymentQrImage').on('value', snapshot => {
+            currentQrImage = snapshot.val() || '';
+            const qrImg = document.getElementById('qr-code-img');
+            const qrLoading = document.getElementById('qr-loading-text');
+            if (qrImg) {
+                if (currentQrImage) {
+                    qrImg.src = currentQrImage;
+                    qrImg.classList.remove('hidden');
+                    if (qrLoading) qrLoading.classList.add('hidden');
+                } else {
+                    qrImg.classList.add('hidden');
+                    if (qrLoading) qrLoading.classList.remove('hidden');
+                }
+            }
+        });
+
+        // Opens the Razorpay checkout popup (Cards, UPI, Netbanking, Wallets)
+        const payWithRazorpay = () => {
+            if (!currentRazorpayKeyId || !currentRazorpayAmount) {
+                alert('Payment abhi setup nahi hua hai. Kripya thodi der baad try karein.');
+                return;
+            }
+            if (typeof Razorpay === 'undefined') {
+                alert('Payment gateway load nahi ho paya. Kripya page refresh karke dobara try karein.');
+                return;
+            }
+            const payBtn = document.getElementById('pay-with-razorpay-btn');
+            const errorEl = document.getElementById('payment-form-error');
+            if (errorEl) errorEl.textContent = '';
+
+            const options = {
+                key: currentRazorpayKeyId,
+                amount: Math.round(Number(currentRazorpayAmount) * 100), // paise
+                currency: 'INR',
+                name: currentRazorpayPayeeName || 'Desi Tournament',
+                description: 'Premium Access',
+                handler: function (response) {
+                    const user = auth.currentUser;
+                    if (!user) return;
+                    if (payBtn) { payBtn.disabled = true; payBtn.textContent = 'Verifying...'; }
+                    db.ref('paymentRequests').push({
+                        uid: user.uid,
+                        email: user.email,
+                        razorpayPaymentId: response.razorpay_payment_id || '',
+                        amount: currentRazorpayAmount,
+                        status: 'pending',
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    }).catch(err => {
+                        if (errorEl) errorEl.textContent = err.message;
+                        if (payBtn) { payBtn.disabled = false; payBtn.textContent = 'Pay Now'; }
+                    });
+                    // On success, the paymentRequestRef listener below will switch to the pending view automatically
+                },
+                modal: {
+                    ondismiss: function () {
+                        if (payBtn) { payBtn.disabled = false; payBtn.innerHTML = '<i class="fas fa-bolt"></i> Pay Now'; }
+                    }
+                },
+                theme: { color: '#2563eb' }
+            };
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response) {
+                if (errorEl) errorEl.textContent = 'Payment fail ho gaya. Kripya dobara try karein.';
+                if (payBtn) { payBtn.disabled = false; payBtn.innerHTML = '<i class="fas fa-bolt"></i> Pay Now'; }
+            });
+            rzp.open();
+        };
+
+        const renderPaymentForm = (rejectionNote) => {
+            const contentEl = document.getElementById('payment-content');
+            if (!contentEl) return;
+            contentEl.innerHTML = `
+                <h2 class="text-2xl font-bold mb-2">Complete Payment</h2>
+                <p class="text-gray-400 mb-4">Home page dekhne ke liye payment complete karein.</p>
+                ${rejectionNote !== undefined ? `<div class="bg-red-900/50 border border-red-600 text-red-300 rounded-lg p-3 mb-4 text-sm">Aapka pichla payment reject ho gaya tha${rejectionNote ? ': ' + rejectionNote : ''}. Kripya dobara try karein.</div>` : ''}
+                <div class="bg-slate-800 rounded-lg p-6 mb-4 text-center">
+                    ${currentRazorpayAmount ? `<p class="text-3xl font-bold mb-4">₹${currentRazorpayAmount}</p>` : ''}
+                    <button type="button" id="pay-with-razorpay-btn" class="w-full bg-blue-600 hover:bg-blue-700 rounded-lg p-3 font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-bolt"></i> Pay Now
+                    </button>
+                    <p class="text-sm text-gray-400 mt-2">Cards, UPI, Netbanking, Wallets — sabse payment kar sakte hain.</p>
+                    <p id="payment-form-error" class="text-red-500 text-sm mt-2"></p>
+                </div>
+                <div class="bg-slate-800 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-gray-400 mb-3">Ya seedha apne UPI app se ye QR scan karke pay karein</p>
+                    <img id="qr-code-img" src="${currentQrImage}" class="w-48 h-48 mx-auto object-contain rounded-lg ${currentQrImage ? '' : 'hidden'}">
+                    <p id="qr-loading-text" class="text-gray-400 ${currentQrImage ? 'hidden' : ''}">QR code abhi available nahi hai.</p>
+                    <form id="qr-payment-form" class="text-left mt-4">
+                        <label class="block text-sm text-gray-400 mb-2">QR se pay kiya hai? Payment ka Screenshot Upload Karein</label>
+                        <input type="file" id="payment-screenshot" accept="image/*" required class="w-full text-sm text-gray-300 mb-4">
+                        <button type="submit" id="qr-payment-submit-btn" class="w-full bg-green-600 hover:bg-green-700 rounded-lg p-3 font-semibold">Submit Payment Proof</button>
+                        <p id="qr-payment-form-error" class="text-red-500 text-sm mt-2"></p>
+                    </form>
+                </div>
+            `;
+            const razorpayBtn = document.getElementById('pay-with-razorpay-btn');
+            if (razorpayBtn) razorpayBtn.addEventListener('click', payWithRazorpay);
+            const qrForm = document.getElementById('qr-payment-form');
+            if (qrForm) qrForm.addEventListener('submit', handleQrPaymentSubmit);
+        };
+
+        // Compresses/resizes an image file in the browser so it always fits within targetBytes,
+        // regardless of the original photo's resolution or size (avoids "file too big" errors for users)
+        const compressImageFile = (file, targetBytes = 700 * 1024, maxDimension = 1280) => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('File padhne me error aayi.'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Image load nahi ho payi.'));
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = Math.round(height * (maxDimension / width));
+                                width = maxDimension;
+                            } else {
+                                width = Math.round(width * (maxDimension / height));
+                                height = maxDimension;
+                            }
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                        let quality = 0.9;
+                        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        // Roughly estimate byte size of the base64 string and step quality down until it fits
+                        while (dataUrl.length * 0.75 > targetBytes && quality > 0.2) {
+                            quality -= 0.1;
+                            dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        }
+                        resolve(dataUrl);
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        };
+
+        const handleQrPaymentSubmit = (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('payment-screenshot');
+            const errorEl = document.getElementById('qr-payment-form-error');
+            const submitBtn = document.getElementById('qr-payment-submit-btn');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                errorEl.textContent = 'Kripya screenshot select karein.';
+                return;
+            }
+
+            errorEl.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Uploading...';
+
+            compressImageFile(file).then(dataUrl => {
+                const user = auth.currentUser;
+                if (!user) return;
+                db.ref('paymentRequests').push({
+                    uid: user.uid,
+                    email: user.email,
+                    screenshot: dataUrl,
+                    amount: currentRazorpayAmount,
+                    status: 'pending',
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).catch(err => {
+                    errorEl.textContent = err.message;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Payment Proof';
+                });
+                // On success, the paymentRequestRef listener below will switch to the pending view automatically
+            }).catch(err => {
+                errorEl.textContent = err.message || 'Screenshot process karne me error aayi.';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Payment Proof';
+            });
+        };
+
+        const renderPaymentPending = () => {
+            const contentEl = document.getElementById('payment-content');
+            if (!contentEl) return;
+            contentEl.innerHTML = `
+                <div class="bg-slate-800 rounded-lg p-6">
+                    <i class="fas fa-hourglass-half text-4xl text-yellow-400 mb-4"></i>
+                    <h2 class="text-xl font-bold mb-2">Verification Pending</h2>
+                    <p class="text-gray-400">Aapka payment admin ko bhej diya gaya hai. Approve hote hi aap home page automatically dekh payenge.</p>
+                </div>
+            `;
+        };
+
+        const listenForPaymentRequest = (user) => {
+            if (paymentRequestRef) paymentRequestRef.off();
+            paymentRequestRef = db.ref('paymentRequests').orderByChild('uid').equalTo(user.uid);
+            paymentRequestRef.on('value', snapshot => {
+                const requests = snapshot.val() || {};
+                const entries = Object.entries(requests);
+
+                if (entries.length === 0) {
+                    renderPaymentForm();
+                    return;
+                }
+
+                entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+                const [, latest] = entries[0];
+
+                if (latest.status === 'rejected') {
+                    renderPaymentForm(latest.rejectionNote || '');
+                } else if (latest.status === 'pending') {
+                    renderPaymentPending();
+                } else {
+                    renderPaymentForm();
+                }
+            });
+        };
+
+        const initPaymentGate = (user) => {
+            if (userPaymentRef) userPaymentRef.off();
+            userPaymentRef = db.ref('users/' + user.uid);
+            userPaymentRef.on('value', snapshot => {
+                const userData = snapshot.val() || {};
+                userIsPaid = !!userData.isPaid;
+                updateProfilePhotoDisplay(userData.profilePhoto || '');
+                listenForPaymentRequest(user);
+                refreshLockedUI();
+                if (userIsPaid) {
+                    const paymentPage = document.getElementById('payment-page');
+                    if (paymentPage && paymentPage.classList.contains('active')) {
+                        showPage('home-page');
+                    }
+                }
+            });
+        };
+
+        const teardownPaymentGate = () => {
+            userIsPaid = false;
+            if (userPaymentRef) { userPaymentRef.off(); userPaymentRef = null; }
+            if (paymentRequestRef) { paymentRequestRef.off(); paymentRequestRef = null; }
+            updateProfilePhotoDisplay('');
+            refreshLockedUI();
+            const paymentPage = document.getElementById('payment-page');
+            if (paymentPage && paymentPage.classList.contains('active')) {
+                showPage('home-page');
+            }
+        };
+
+        // --- PROFILE PHOTO ---
+        const instagramLink = document.getElementById('instagram-link');
+        const whatsappLink = document.getElementById('whatsapp-link');
+
+        // Clean a raw Instagram value from admin settings down to a bare username,
+        // in case a full URL, "@handle", or stray spaces were pasted in.
+        const cleanInstagramUsername = (raw) => {
+            if (!raw) return '';
+            let val = String(raw).trim();
+            val = val.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '');
+            val = val.replace(/^@/, '');
+            val = val.replace(/\/.*$/, ''); // drop anything after the username
+            val = val.trim();
+            return val;
+        };
+
+        // Clean a raw WhatsApp value down to digits only (with country code, no + or spaces),
+        // in case "+", spaces, dashes, or a full wa.me URL were pasted in.
+        const cleanWhatsappNumber = (raw) => {
+            if (!raw) return '';
+            let val = String(raw).trim();
+            val = val.replace(/^https?:\/\/(www\.)?wa\.me\//i, '');
+            val = val.replace(/\D/g, ''); // keep digits only
+            return val;
+        };
+
+        const setSocialLink = (anchorEl, url) => {
+            if (!anchorEl) return;
+            if (url) {
+                anchorEl.href = url;
+                anchorEl.classList.remove('opacity-40', 'pointer-events-none');
+                anchorEl.removeAttribute('aria-disabled');
+            } else {
+                // No valid link set in admin panel: remove href entirely instead of
+                // leaving href="#" (a "#" link opened in a new tab is what triggers
+                // "Couldn't open link" inside the app's webview).
+                anchorEl.removeAttribute('href');
+                anchorEl.classList.add('opacity-40', 'pointer-events-none');
+                anchorEl.setAttribute('aria-disabled', 'true');
+            }
+        };
+
+        // Social links are controlled from the Admin Panel -> Settings, kept in sync live
+        db.ref('settings').on('value', snapshot => {
+            const settings = snapshot.val() || {};
+            const igUsername = cleanInstagramUsername(settings.instagramUsername);
+            const waNumber = cleanWhatsappNumber(settings.whatsappNumber);
+            setSocialLink(instagramLink, igUsername ? `https://www.instagram.com/${igUsername}/` : '');
+            setSocialLink(whatsappLink, waNumber ? `https://wa.me/${waNumber}` : '');
+        });
+
+        const profilePhotoImg = document.getElementById('profile-photo-img');
+        const profilePhotoPlaceholder = document.getElementById('profile-photo-placeholder');
+        const profilePhotoInput = document.getElementById('profile-photo-input');
+        const profilePhotoStatus = document.getElementById('profile-photo-status');
+
+        const updateProfilePhotoDisplay = (photoUrl) => {
+            if (!profilePhotoImg || !profilePhotoPlaceholder) return;
+            if (photoUrl) {
+                profilePhotoImg.src = photoUrl;
+                profilePhotoImg.classList.remove('hidden');
+                profilePhotoPlaceholder.classList.add('hidden');
+            } else {
+                profilePhotoImg.classList.add('hidden');
+                profilePhotoPlaceholder.classList.remove('hidden');
+            }
+        };
+
+        if (profilePhotoInput) {
+            profilePhotoInput.addEventListener('change', () => {
+                const file = profilePhotoInput.files[0];
+                const user = auth.currentUser;
+                if (!file || !user) return;
+
+                profilePhotoStatus.textContent = 'Uploading...';
+                profilePhotoStatus.className = 'text-sm mb-4 text-gray-400';
+
+                compressImageFile(file)
+                    .then(dataUrl => db.ref('users/' + user.uid).update({ profilePhoto: dataUrl }))
+                    .then(() => {
+                        profilePhotoStatus.textContent = 'Photo update ho gayi!';
+                        profilePhotoStatus.className = 'text-sm mb-4 text-green-400';
+                    })
+                    .catch(err => {
+                        profilePhotoStatus.textContent = err.message || 'Upload me error aayi.';
+                        profilePhotoStatus.className = 'text-sm mb-4 text-red-400';
+                    });
+            });
+        }
+
+        // --- POSTS / COMMUNITY FEED ---
+        let allPosts = {};
+        const postPhotoInput = document.getElementById('post-photo-input');
+        const postPhotoStatus = document.getElementById('post-photo-status');
+        const myPostsGrid = document.getElementById('my-posts-grid');
+        const postsFeedContainer = document.getElementById('posts-feed');
+        const commentsModal = document.getElementById('comments-modal');
+        const commentsModalClose = document.getElementById('comments-modal-close');
+        const commentsList = document.getElementById('comments-list');
+        const commentInput = document.getElementById('comment-input');
+        const commentSendBtn = document.getElementById('comment-send-btn');
+        let activeCommentPostId = null;
+
+        const escapeHtml = (str) => String(str || '').replace(/[&<>"']/g, (c) => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+
+        // Reuse the existing full-photo zoom modal to view a post's image
+        const openImageModal = (imageUrl) => {
+            headerIconModalImg.src = imageUrl;
+            headerIconModalImg.classList.remove('zoomed-in');
+            headerIconModalImg.style.transform = '';
+            headerIconModal.classList.remove('hidden');
+        };
+
+        if (postPhotoInput) {
+            postPhotoInput.addEventListener('change', () => {
+                const file = postPhotoInput.files[0];
+                const user = auth.currentUser;
+                if (!file || !user) return;
+
+                postPhotoStatus.textContent = 'Uploading...';
+                postPhotoStatus.className = 'text-sm mb-3 text-center text-gray-400';
+
+                compressImageFile(file).then(dataUrl => {
+                    const displayName = (user.email || 'User').split('@')[0];
+                    const photoURL = (profilePhotoImg && !profilePhotoImg.classList.contains('hidden')) ? profilePhotoImg.src : '';
+                    return db.ref('posts').push({
+                        uid: user.uid,
+                        displayName: displayName,
+                        photoURL: photoURL,
+                        imageUrl: dataUrl,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }).then(() => {
+                    postPhotoStatus.textContent = 'Post upload ho gaya!';
+                    postPhotoStatus.className = 'text-sm mb-3 text-center text-green-400';
+                    postPhotoInput.value = '';
+                }).catch(err => {
+                    postPhotoStatus.textContent = err.message || 'Upload me error aayi.';
+                    postPhotoStatus.className = 'text-sm mb-3 text-center text-red-400';
+                });
+            });
+        }
+
+        // Gallery of the logged-in user's own uploaded posts, shown below their profile
+        const renderMyPosts = () => {
+            if (!myPostsGrid) return;
+            const user = auth.currentUser;
+            if (!user) { myPostsGrid.innerHTML = ''; return; }
+
+            const mine = Object.entries(allPosts).filter(([id, p]) => p && p.uid === user.uid);
+            mine.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            if (mine.length === 0) {
+                myPostsGrid.innerHTML = '<p class="col-span-3 text-gray-400 text-sm">Abhi tak koi photo upload nahi ki.</p>';
+                return;
+            }
+
+            myPostsGrid.innerHTML = mine.map(([id, p]) => {
+                const likeCount = Object.keys(p.likes || {}).length;
+                const commentCount = Object.keys(p.comments || {}).length;
+                return `
+                <div class="relative aspect-square overflow-hidden rounded-md bg-slate-800" data-post-id="${id}">
+                    <img src="${p.imageUrl}" class="w-full h-full object-cover cursor-pointer post-thumb" data-post-id="${id}">
+                    <button class="post-delete-btn absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 hover:bg-red-600 text-white flex items-center justify-center text-xs" data-post-id="${id}" title="Delete photo">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/60 px-1.5 py-1 flex items-center gap-2 text-[11px] text-white">
+                        <span class="flex items-center gap-1"><i class="fas fa-thumbs-up"></i>${likeCount}</span>
+                        <span class="flex items-center gap-1"><i class="fas fa-comment"></i>${commentCount}</span>
+                        <button class="post-share-btn flex items-center gap-1 ml-auto" data-post-id="${id}" title="Share">
+                            <i class="fas fa-share"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            myPostsGrid.querySelectorAll('.post-thumb').forEach(el => {
+                el.addEventListener('click', () => {
+                    const p = allPosts[el.dataset.postId];
+                    if (p) openImageModal(p.imageUrl);
+                });
+            });
+            myPostsGrid.querySelectorAll('.post-share-btn').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sharePost(el.dataset.postId);
+                });
+            });
+            myPostsGrid.querySelectorAll('.post-delete-btn').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = el.dataset.postId;
+                    if (!confirm('Kya aap sach me is photo ko delete karna chahte hain?')) return;
+                    db.ref('posts/' + postId).remove();
+                });
+            });
+        };
+
+        // Community feed shown on the Search page: every uploaded post, newest first
+        const renderPostsFeed = () => {
+            if (!postsFeedContainer) return;
+            const entries = Object.entries(allPosts).filter(([id, p]) => p && p.imageUrl);
+            if (entries.length === 0) {
+                postsFeedContainer.innerHTML = '';
+                return;
+            }
+            entries.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+            const user = auth.currentUser;
+
+            postsFeedContainer.innerHTML = entries.map(([id, p]) => {
+                const likes = p.likes || {};
+                const loves = p.loves || {};
+                const comments = p.comments || {};
+                const likeCount = Object.keys(likes).length;
+                const loveCount = Object.keys(loves).length;
+                const commentCount = Object.keys(comments).length;
+                const likedByMe = !!(user && likes[user.uid]);
+                const lovedByMe = !!(user && loves[user.uid]);
+                const avatarHtml = p.photoURL
+                    ? `<img src="${p.photoURL}" class="w-9 h-9 rounded-full object-cover flex-shrink-0">`
+                    : `<div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0"><i class="fas fa-user text-gray-400"></i></div>`;
+
+                return `
+                <div class="bg-slate-800 rounded-xl overflow-hidden shadow-md">
+                    <div class="flex items-center gap-3 p-3">
+                        ${avatarHtml}
+                        <span class="font-semibold">${escapeHtml(p.displayName || 'User')}</span>
+                    </div>
+                    <div class="post-img-wrap cursor-pointer" data-post-id="${id}">
+                        <img src="${p.imageUrl}" class="w-full h-auto object-cover">
+                    </div>
+                    <div class="flex items-center gap-5 px-4 py-3">
+                        <button class="post-like-btn flex items-center gap-2 ${likedByMe ? 'text-blue-500' : 'text-gray-400'}" data-post-id="${id}">
+                            <i class="fas fa-thumbs-up"></i><span>${likeCount}</span>
+                        </button>
+                        <button class="post-love-btn flex items-center gap-2 ${lovedByMe ? 'text-pink-500' : 'text-gray-400'}" data-post-id="${id}">
+                            <i class="fas fa-heart"></i><span>${loveCount}</span>
+                        </button>
+                        <button class="post-comment-btn flex items-center gap-2 text-gray-400" data-post-id="${id}">
+                            <i class="fas fa-comment"></i><span>${commentCount}</span>
+                        </button>
+                        <button class="post-share-btn flex items-center gap-2 text-gray-400 ml-auto" data-post-id="${id}">
+                            <i class="fas fa-share"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            postsFeedContainer.querySelectorAll('.post-img-wrap').forEach(el => {
+                el.addEventListener('click', () => {
+                    const p = allPosts[el.dataset.postId];
+                    if (p) openImageModal(p.imageUrl);
+                });
+            });
+            postsFeedContainer.querySelectorAll('.post-like-btn').forEach(el => {
+                el.addEventListener('click', () => togglePostReaction(el.dataset.postId, 'likes'));
+            });
+            postsFeedContainer.querySelectorAll('.post-love-btn').forEach(el => {
+                el.addEventListener('click', () => togglePostReaction(el.dataset.postId, 'loves'));
+            });
+            postsFeedContainer.querySelectorAll('.post-comment-btn').forEach(el => {
+                el.addEventListener('click', () => openCommentsModal(el.dataset.postId));
+            });
+            postsFeedContainer.querySelectorAll('.post-share-btn').forEach(el => {
+                el.addEventListener('click', () => sharePost(el.dataset.postId));
+            });
+        };
+
+        const togglePostReaction = (postId, field) => {
+            const user = auth.currentUser;
+            if (!user) { showPage('profile-page'); return; }
+            const ref = db.ref(`posts/${postId}/${field}/${user.uid}`);
+            ref.once('value').then(snap => {
+                if (snap.exists()) ref.remove();
+                else ref.set(true);
+            });
+        };
+
+        const sharePost = (postId) => {
+            const p = allPosts[postId];
+            if (!p) return;
+            if (navigator.share) {
+                navigator.share({
+                    title: 'DESI TOURNAMENT',
+                    text: `Check out this post by ${p.displayName || 'a user'}!`,
+                    url: window.location.href
+                }).catch(() => {});
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'));
+            }
+        };
+
+        // --- COMMENTS MODAL ---
+        const openCommentsModal = (postId) => {
+            activeCommentPostId = postId;
+            renderComments();
+            commentsModal.classList.remove('hidden');
+        };
+        const renderComments = () => {
+            const p = allPosts[activeCommentPostId];
+            const comments = (p && p.comments) || {};
+            const entries = Object.entries(comments).sort((a, b) => (a[1].timestamp || 0) - (b[1].timestamp || 0));
+            commentsList.innerHTML = entries.length
+                ? entries.map(([id, c]) => `
+                    <div class="text-sm">
+                        <span class="font-semibold">${escapeHtml(c.displayName || 'User')}: </span>
+                        <span class="text-gray-300">${escapeHtml(c.text)}</span>
+                    </div>`).join('')
+                : '<p class="text-gray-400 text-sm">Abhi koi comment nahi hai.</p>';
+        };
+        if (commentsModalClose) {
+            commentsModalClose.addEventListener('click', () => {
+                commentsModal.classList.add('hidden');
+                activeCommentPostId = null;
+            });
+        }
+        if (commentsModal) {
+            commentsModal.addEventListener('click', (e) => {
+                if (e.target === commentsModal) {
+                    commentsModal.classList.add('hidden');
+                    activeCommentPostId = null;
+                }
+            });
+        }
+        if (commentSendBtn) {
+            commentSendBtn.addEventListener('click', () => {
+                const user = auth.currentUser;
+                const text = commentInput.value.trim();
+                if (!user) {
+                    commentsModal.classList.add('hidden');
+                    showPage('profile-page');
+                    return;
+                }
+                if (!text || !activeCommentPostId) return;
+                const displayName = (user.email || 'User').split('@')[0];
+                db.ref(`posts/${activeCommentPostId}/comments`).push({
+                    uid: user.uid,
+                    displayName,
+                    text,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => { commentInput.value = ''; });
+            });
+        }
+
+        // Live-sync all posts from Firebase and keep both views up to date
+        db.ref('posts').on('value', snapshot => {
+            allPosts = snapshot.val() || {};
+            renderPostsFeed();
+            renderMyPosts();
+            if (activeCommentPostId) renderComments();
+        });
+
+        // --- PUSH NOTIFICATIONS (FCM) ---
+        // TODO: paste your VAPID key here (Firebase Console -> Project Settings -> Cloud Messaging -> Web Push certificates)
+        const FCM_VAPID_KEY = 'BEJyVMkPUMrrc_2ztKFO1cSDzfdv4Mf9Wdo9Zos-U7MglX7IVjM8C4mBKx18hq4klsAt4KYoMlcp1RkE-QNEMfI';
+
+        const notificationStatusEl = document.getElementById('notification-status');
+        const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
+
+        const setNotificationStatus = (text, colorClass) => {
+            if (!notificationStatusEl) return;
+            notificationStatusEl.textContent = text;
+            notificationStatusEl.className = `text-sm mb-4 ${colorClass || 'text-gray-400'}`;
+        };
+
+        const saveFcmToken = (token) => {
+            const user = auth.currentUser;
+            if (!token) return;
+            db.ref('fcmTokens/' + token).set({
+                uid: user ? user.uid : null,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            }).catch(err => console.error('Failed to save FCM token:', err));
+        };
+
+        const setupPushNotifications = async () => {
+            if (!('Notification' in window) || !('serviceWorker' in navigator) || !firebase.messaging.isSupported()) {
+                setNotificationStatus('Is browser me notifications supported nahi hain.', 'text-red-400');
+                return;
+            }
+
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    setNotificationStatus('Notifications block hain. Browser settings me allow karein.', 'text-red-400');
+                    return;
+                }
+
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                const messaging = firebase.messaging();
+                const token = await messaging.getToken({
+                    vapidKey: FCM_VAPID_KEY,
+                    serviceWorkerRegistration: registration
+                });
+
+                if (token) {
+                    saveFcmToken(token);
+                    setNotificationStatus('Notifications ON hain!', 'text-green-400');
+                } else {
+                    setNotificationStatus('Token nahi mila, dobara try karein.', 'text-red-400');
+                }
+
+                // Foreground messages (app khula ho tab bhi popup dikhega)
+                messaging.onMessage((payload) => {
+                    const title = (payload.notification && payload.notification.title) || 'New Update';
+                    const body = (payload.notification && payload.notification.body) || '';
+                    if (Notification.permission === 'granted') {
+                        new Notification(title, { body, icon: '/icon-192.png' });
+                    }
+                });
+            } catch (err) {
+                console.error('Push notification setup failed:', err);
+                setNotificationStatus('Kuch error aayi: ' + err.message, 'text-red-400');
+            }
+        };
+
+        if (enableNotificationsBtn) {
+            enableNotificationsBtn.addEventListener('click', setupPushNotifications);
+        }
+
+        // Auto re-enable silently on load if permission was already granted earlier
+        if ('Notification' in window && Notification.permission === 'granted') {
+            setupPushNotifications();
+        }
+
+        // --- SHARE APP LINK ---
+        const shareAppBtn = document.getElementById('share-app-btn');
+        const shareAppStatus = document.getElementById('share-app-status');
+
+        if (shareAppBtn) {
+            shareAppBtn.addEventListener('click', async () => {
+                const appUrl = window.location.href.split('#')[0].split('?')[0];
+                const shareData = {
+                    title: 'DESI TOURNAMENT',
+                    text: 'DESI TOURNAMENT try karo - live football matches dekho!',
+                    url: appUrl
+                };
+                try {
+                    if (navigator.share) {
+                        await navigator.share(shareData);
+                    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(appUrl);
+                        shareAppStatus.textContent = 'App link copy ho gaya!';
+                        shareAppStatus.className = 'text-sm mb-4 text-green-400';
+                    } else {
+                        prompt('App link copy karein:', appUrl);
+                    }
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Share failed:', err);
+                        shareAppStatus.textContent = 'Share nahi ho paya, dobara try karein.';
+                        shareAppStatus.className = 'text-sm mb-4 text-red-400';
+                    }
+                }
+            });
+        }
+
+        // --- NOTIFICATIONS INBOX (admin panel se bheji gayi notifications) ---
+        const notificationsBellBtn = document.getElementById('notifications-bell-btn');
+        const notificationsBadge = document.getElementById('notifications-badge');
+        const notificationsModal = document.getElementById('notifications-modal');
+        const notificationsModalClose = document.getElementById('notifications-modal-close');
+        const notificationsList = document.getElementById('notifications-list');
+
+        const NOTIF_LAST_SEEN_KEY = 'desitournament_notifications_last_seen';
+        let lastSeenNotifTime = Number(localStorage.getItem(NOTIF_LAST_SEEN_KEY) || 0);
+        let latestNotifTime = lastSeenNotifTime;
+        let notifSoundedFor = new Set(); // avoid duplicate local popups in one session
+
+        const timeAgo = (ts) => {
+            if (!ts) return '';
+            const diff = Math.max(0, Date.now() - ts);
+            const mins = Math.floor(diff / 60000);
+            if (mins < 1) return 'Abhi';
+            if (mins < 60) return `${mins}m pehle`;
+            const hrs = Math.floor(mins / 60);
+            if (hrs < 24) return `${hrs}h pehle`;
+            const days = Math.floor(hrs / 24);
+            return `${days}d pehle`;
+        };
+
+        db.ref('notifications').orderByChild('timestamp').limitToLast(50).on('value', snapshot => {
+            const data = snapshot.val() || {};
+            const entries = Object.entries(data).sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+
+            if (entries.length === 0) {
+                notificationsList.innerHTML = '<p class="text-gray-400 text-sm">Abhi tak koi notification nahi hai.</p>';
+            } else {
+                notificationsList.innerHTML = entries.map(([id, n]) => `
+                    <div class="bg-slate-700/60 rounded-lg p-3">
+                        <p class="font-semibold text-sm">${n.title || 'Update'}</p>
+                        ${n.body ? `<p class="text-sm text-gray-300 mt-1">${n.body}</p>` : ''}
+                        <p class="text-xs text-gray-500 mt-1">${timeAgo(n.timestamp)}</p>
+                    </div>
+                `).join('');
+            }
+
+            const newestTime = entries.length ? (entries[0][1].timestamp || 0) : 0;
+            latestNotifTime = newestTime;
+            const unreadCount = entries.filter(([, n]) => (n.timestamp || 0) > lastSeenNotifTime).length;
+            if (unreadCount > 0) {
+                notificationsBadge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
+                notificationsBadge.classList.remove('hidden');
+                notificationsBadge.classList.add('flex');
+            } else {
+                notificationsBadge.classList.add('hidden');
+                notificationsBadge.classList.remove('flex');
+            }
+
+            // If a genuinely new notification just arrived and this tab already has
+            // browser permission granted, show a local popup immediately (best-effort,
+            // works while the app tab is open; for true closed-app push delivery the
+            // admin's "send" action also needs a backend Cloud Function, see admin panel notes).
+            entries.forEach(([id, n]) => {
+                if ((n.timestamp || 0) > lastSeenNotifTime && !notifSoundedFor.has(id)) {
+                    notifSoundedFor.add(id);
+                    if (Notification.permission === 'granted' && (n.timestamp || 0) > (Date.now() - 60000)) {
+                        try { new Notification(n.title || 'New Update', { body: n.body || '' }); } catch (e) {}
+                    }
+                }
+            });
+        });
+
+        if (notificationsBellBtn) {
+            notificationsBellBtn.addEventListener('click', () => {
+                notificationsModal.classList.remove('hidden');
+                lastSeenNotifTime = latestNotifTime;
+                localStorage.setItem(NOTIF_LAST_SEEN_KEY, String(lastSeenNotifTime));
+                notificationsBadge.classList.add('hidden');
+                notificationsBadge.classList.remove('flex');
+            });
+        }
+        if (notificationsModalClose) {
+            notificationsModalClose.addEventListener('click', () => notificationsModal.classList.add('hidden'));
+        }
+        if (notificationsModal) {
+            notificationsModal.addEventListener('click', (e) => {
+                if (e.target === notificationsModal) notificationsModal.classList.add('hidden');
+            });
+        }
+
+        // --- HEADER ICON (up to 5 photos set from Admin Panel; rotate automatically, click ke click par full display hoga) ---
+        const headerIconBtn = document.getElementById('header-icon-btn');
+        const headerIconImg = document.getElementById('header-icon-img');
+        const headerIconModal = document.getElementById('header-icon-modal');
+        const headerIconModalImg = document.getElementById('header-icon-modal-img');
+        const headerIconModalClose = document.getElementById('header-icon-modal-close');
+
+        let headerIconUrls = [];
+        let headerIconRotateIndex = 0;
+        let headerIconRotateTimer = null;
+
+        const showHeaderIconAt = (index, animate) => {
+            if (!headerIconUrls.length) return;
+            headerIconRotateIndex = index % headerIconUrls.length;
+            const nextUrl = headerIconUrls[headerIconRotateIndex];
+            if (animate) {
+                headerIconImg.style.opacity = '0';
+                setTimeout(() => {
+                    headerIconImg.src = nextUrl;
+                    headerIconImg.style.opacity = '1';
+                }, 500);
+            } else {
+                headerIconImg.src = nextUrl;
+            }
+        };
+
+        db.ref('settings/headerIcons').on('value', snapshot => {
+            const icons = snapshot.val() || {};
+            headerIconUrls = Object.values(icons).map(i => i.url).filter(Boolean);
+
+            if (headerIconRotateTimer) { clearInterval(headerIconRotateTimer); headerIconRotateTimer = null; }
+
+            if (headerIconUrls.length > 0) {
+                showHeaderIconAt(0, false);
+                headerIconBtn.classList.remove('hidden');
+                headerIconBtn.classList.add('flex');
+                if (headerIconUrls.length > 1) {
+                    headerIconRotateTimer = setInterval(() => {
+                        showHeaderIconAt(headerIconRotateIndex + 1, true);
+                    }, 3000);
+                }
+            } else {
+                headerIconBtn.classList.add('hidden');
+                headerIconBtn.classList.remove('flex');
+            }
+        });
+
+        if (headerIconBtn) {
+            headerIconBtn.addEventListener('click', () => {
+                headerIconModalImg.src = headerIconImg.src;
+                headerIconModalImg.classList.remove('zoomed-in');
+                headerIconModalImg.style.transform = '';
+                headerIconModal.classList.remove('hidden');
+            });
+        }
+        if (headerIconModalClose) {
+            headerIconModalClose.addEventListener('click', () => headerIconModal.classList.add('hidden'));
+        }
+        if (headerIconModal) {
+            headerIconModal.addEventListener('click', (e) => {
+                if (e.target === headerIconModal) headerIconModal.classList.add('hidden');
+            });
+        }
+        // Tap the photo itself to zoom in (2.5x) / tap again to zoom back out
+        if (headerIconModalImg) {
+            headerIconModalImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isZoomed = headerIconModalImg.classList.toggle('zoomed-in');
+                headerIconModalImg.style.transform = isZoomed ? 'scale(2.5)' : '';
+                headerIconModalImg.style.cursor = isZoomed ? 'zoom-out' : 'zoom-in';
+            });
+        }
+
+        // Re-renders whatever movie grids are visible so lock icons stay in sync with paid status
+        const refreshLockedUI = () => {
+            if (lastBannersData) renderBanners(lastBannersData);
+            if (Object.keys(allMovies).length) renderHomePage();
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm.length >= 2) searchInput.dispatchEvent(new Event('input'));
+        };
+
+        // Decides whether clicking a movie opens it directly or shows the payment screen first
+        const handleMovieClick = (movieId) => {
+            if (!auth.currentUser) {
+                showPage('profile-page');
+                return;
+            }
+            if (userIsPaid) {
+                showMovieDetails(movieId);
+            } else {
+                showPage('payment-page');
+            }
+        };
+
+        // Decides whether clicking a locked banner plays its video or shows the payment screen first
+        const handleBannerClick = (watchLink) => {
+            if (!auth.currentUser) {
+                showPage('profile-page');
+                return;
+            }
+            if (userIsPaid) {
+                playBannerVideo(watchLink);
+            } else {
+                showPage('payment-page');
+            }
+        };
+
+        document.getElementById('payment-logout-btn').addEventListener('click', () => auth.signOut());
+
+        // --- INITIAL DATA LOAD ---
+        const loadInitialData = () => {
+            const moviesRef = db.ref('movies');
+            const categoriesRef = db.ref('categories');
+            const bannersRef = db.ref('banners');
+
+            bannersRef.on('value', snapshot => {
+                renderBanners(snapshot.val());
+            });
+
+            const gameBannersRef = db.ref('gameBanners');
+            gameBannersRef.on('value', snapshot => {
+                renderGameBanners(snapshot.val());
+            });
+
+            categoriesRef.on('value', snapshot => {
+                allCategories = snapshot.val() || {};
+                renderCategoriesPage();
+                // If movies are already loaded, re-render home page
+                if (Object.keys(allMovies).length > 0) {
+                    renderHomePage();
+                }
+            });
+
+            moviesRef.on('value', snapshot => {
+                allMovies = snapshot.val() || {};
+                // If categories are already loaded, render home page
+                if (Object.keys(allCategories).length > 0) {
+                    renderHomePage();
+                }
+            });
+        };
+
+        // --- APP INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('home-page');
+            loadInitialData();
+        });
+
+        // Fallback double-tap-to-zoom blocker (some browsers ignore user-scalable=no)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) e.preventDefault();
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // Block pinch-zoom gesture (iOS Safari)
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
