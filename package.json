@@ -1,0 +1,9 @@
+{
+  "name": "desi-tournament-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DESI TOURNAMENT website + Netlify function for LiveKit live-stream tokens",
+  "dependencies": {
+    "livekit-server-sdk": "^2.9.2"
+  }
+}
